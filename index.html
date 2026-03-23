@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOLF LABS | What are you doing? (A1)</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        void: '#121212',
+                        panel: '#181818',
+                        sysGreen: '#1DB954',
+                        sysRed: '#E22134',
+                        textMuted: '#b3b3b3'
+                    },
+                    fontFamily: {
+                        title: ['Inter', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    boxShadow: {
+                        'neon-green': '0 0 20px rgba(29, 185, 84, 0.4)',
+                        'neon-red': '0 0 20px rgba(226, 33, 52, 0.5)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CORE WOLF LABS AESTHETIC */
+        body { 
+            background-color: #121212; 
+            color: #ffffff; 
+            overflow-x: hidden; 
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(29, 185, 84, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .hud-panel {
+            background: rgba(24, 24, 24, 0.85);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .game-card {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            position: relative; border-radius: 12px; transition: all 0.3s ease;
+        }
+        .game-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: #1DB954; opacity: 0.8; border-radius: 12px 0 0 12px;
+        }
+
+        /* Chips for Warmups */
+        .chip-btn {
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        /* JIT Vocab Word */
+        .jit-word {
+            position: relative; display: inline-block; cursor: pointer;
+            color: #1DB954; font-weight: 800; border-bottom: 2px dashed #1DB954;
+            transition: all 0.2s ease; padding-bottom: 2px;
+        }
+        .jit-word:hover { color: #fff; text-shadow: 0 0 15px #1DB954; background: rgba(29, 185, 84, 0.15); }
+        .jit-word.active { background: #1DB954; color: #121212; border-bottom: none; border-radius: 4px; padding: 2px 6px; }
+
+        /* Drills & Buttons */
+        .combat-btn { transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); border-radius: 8px;}
+        .combat-btn:hover:not(:disabled) { background: rgba(29, 185, 84, 0.1); border-color: #1DB954; transform: translateY(-2px); box-shadow: 0 0 15px rgba(29, 185, 84, 0.2); }
+        .combat-btn.correct { background: rgba(29, 185, 84, 0.2); color: #1DB954; font-weight: bold; border-color: #1DB954; box-shadow: 0 0 20px rgba(29, 185, 84, 0.4); }
+        .combat-btn.wrong { background: rgba(226, 33, 52, 0.2); color: #E22134; border-color: #E22134; opacity: 0.6; }
+
+        /* MECHANICS VISUALS */
+        .bug-word { cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; border: 1px solid transparent; display: inline-block; margin: 0 2px; font-weight: 600;}
+        .bug-word:hover:not(.locked) { background: rgba(29, 185, 84, 0.2); border-color: #1DB954; }
+        .bug-word.bug-found { background: rgba(226, 33, 52, 0.4); border-color: #E22134; color: #fff; text-decoration: line-through; }
+        .bug-word.bug-wrong { background: rgba(255, 255, 255, 0.1); opacity: 0.5; }
+        
+        .build-word { cursor: pointer; transition: all 0.2s; border-radius: 8px; }
+        .build-word:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(29, 185, 84, 0.3); }
+        .build-slot { min-height: 60px; border: 2px dashed rgba(29, 185, 84, 0.3); transition: all 0.3s; border-radius: 12px; }
+        .build-slot.complete-correct { border-style: solid; border-color: #1DB954; background: rgba(29, 185, 84, 0.1); }
+        .build-slot.complete-wrong { border-style: solid; border-color: #E22134; background: rgba(226, 33, 52, 0.1); }
+
+        .auth-valid:hover:not(:disabled) { background: rgba(29, 185, 84, 0.1); border-color: #1DB954; box-shadow: 0 0 15px rgba(29, 185, 84, 0.3); }
+        .auth-corrupt:hover:not(:disabled) { background: rgba(226, 33, 52, 0.1); border-color: #E22134; box-shadow: 0 0 15px rgba(226, 33, 52, 0.3); }
+
+        .timer-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+        .timer-fill { height: 100%; background: #1DB954; width: 100%; }
+        .timer-anim { animation: shrinkBar 8s linear forwards; }
+        @keyframes shrinkBar { 0% { width: 100%; background: #1DB954; } 50% { background: #FBBF24; } 100% { width: 0%; background: #E22134; } }
+
+        .slot-btn { font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; background: #121212; border: 2px solid #1DB954; color: #1DB954; transition: all 0.1s; user-select: none; border-radius: 8px;}
+        .slot-btn:active { transform: scale(0.95); }
+        .slot-btn.locked { background: #1DB954; color: #121212; pointer-events: none; }
+
+        .stt-box { background: linear-gradient(90deg, rgba(29, 185, 84, 0.1) 0%, rgba(0,0,0,0) 100%); border-left: 4px solid #1DB954; border-radius: 0 8px 8px 0; }
+        .drawer { transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+        .damage-flash { animation: shake 0.4s; box-shadow: inset 0 0 60px rgba(226, 33, 52, 0.3) !important; border-color: #E22134 !important; }
+        .xp-flash { box-shadow: inset 0 0 60px rgba(29, 185, 84, 0.2) !important; border-color: #1DB954 !important; }
+
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px;
+            background: #1DB954; cursor: pointer; margin-top: -10px;
+            box-shadow: 0 0 15px rgba(29, 185, 84, 0.6); border-radius: 50%;
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #121212; }
+        ::-webkit-scrollbar-thumb { background: #1DB954; border-radius: 3px; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="font-body antialiased flex flex-col h-screen overflow-hidden selection:bg-sysGreen selection:text-void">
+
+    <!-- HUD -->
+    <header class="fixed top-0 w-full z-50 hud-panel px-6 py-4 flex justify-between items-center border-b border-white/10">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-graduation-cap text-sysGreen text-2xl drop-shadow-neon-green"></i>
+            <span class="font-title font-bold text-2xl tracking-widest text-white uppercase">WOLF LABS</span>
+            <span class="px-2 py-1 text-[10px] font-mono border border-sysGreen text-sysGreen rounded bg-sysGreen/10 hidden md:block">MAIN SERIES • A1</span>
+        </div>
+        
+        <div class="flex items-center gap-8 font-mono text-sm">
+            <div class="flex flex-col items-end">
+                <span class="text-gray-400 text-[10px] tracking-widest mb-1 uppercase">Focus (HP)</span>
+                <div class="flex items-center gap-3">
+                    <div class="w-32 h-2 bg-black rounded-full overflow-hidden border border-white/10">
+                        <div id="hp-bar" class="h-full bg-sysGreen transition-all duration-300 shadow-neon-green" style="width: 100%;"></div>
+                    </div>
+                    <span id="hp-text" class="text-xl font-title text-sysGreen font-bold">100</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 hidden md:flex">
+                <span class="text-white tracking-widest text-[10px] uppercase">Fluency (XP)</span>
+                <span id="xp-text" class="text-white text-lg font-bold">0</span>
+            </div>
+            <button onclick="toggleFullScreen()" class="w-10 h-10 rounded border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+                <i class="fa-solid fa-expand text-gray-400"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN STAGE -->
+    <main id="engine-stage" class="flex-grow relative pt-24 pb-24 overflow-y-auto w-full z-10 flex flex-col items-center"></main>
+
+    <!-- JIT VOCAB PANEL (Right) -->
+    <div id="jit-panel" class="fixed right-0 top-20 bottom-24 w-[380px] hud-panel border-l border-white/10 z-[5000] translate-x-full drawer p-6 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.8)]">
+        <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+            <h3 class="font-title font-bold text-sysGreen text-sm tracking-widest uppercase"><i class="fa-solid fa-book-open mr-2"></i>Lexicon</h3>
+            <button onclick="closeJIT()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div id="jit-content" class="flex-grow overflow-y-auto pr-2 scrollbar-hide"></div>
+    </div>
+
+    <!-- TACTICAL BOARD (Right) -->
+    <div id="tactical-board" class="fixed right-0 top-0 h-full w-[420px] bg-void border-l border-sysGreen/50 z-[6000] translate-x-full drawer flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.9)]">
+        <div class="p-6 hud-panel flex justify-between items-center border-b border-white/10">
+            <h2 class="font-title font-bold text-2xl tracking-wider text-white"><i class="fa-solid fa-pen-nib text-sysGreen mr-3"></i>Teacher's Board</h2>
+            <button onclick="toggleDrawer('tactical-board')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-chevron-right text-xl"></i></button>
+        </div>
+        <div class="p-4 bg-sysGreen/5 border-b border-sysGreen/20 flex gap-4">
+            <button onclick="clearNotes()" class="text-xs font-mono font-bold text-sysGreen uppercase tracking-widest hover:text-white transition-colors"><i class="fa-solid fa-trash mr-1"></i>Clear Notes</button>
+        </div>
+        <textarea id="t-notes" class="flex-grow w-full bg-transparent p-6 text-white font-mono text-base resize-none focus:outline-none" placeholder="> Type live corrections, translations, and notes here..."></textarea>
+    </div>
+
+    <!-- LESSON MAP (Left) -->
+    <div id="lesson-map" class="fixed left-0 top-0 h-full w-[350px] bg-void border-r border-white/10 z-[6000] -translate-x-full drawer flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.9)]">
+        <div class="p-6 hud-panel flex justify-between items-center border-b border-white/10">
+            <div>
+                <h2 class="font-title font-bold text-2xl tracking-wider text-white uppercase">Lesson Map</h2>
+                <p class="font-mono text-xs text-gray-500 uppercase tracking-widest mt-1">34 Steps • A1 Level</p>
+            </div>
+            <button onclick="toggleDrawer('lesson-map')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-chevron-left text-xl"></i></button>
+        </div>
+        <div id="map-nodes" class="p-4 flex flex-col gap-2 overflow-y-auto scrollbar-hide"></div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <footer class="fixed bottom-0 w-full z-50 hud-panel border-t border-white/10 px-6 py-4 flex justify-between items-center">
+        <button onclick="toggleDrawer('lesson-map')" class="text-gray-400 hover:text-white transition-colors flex items-center gap-3 font-mono text-xs uppercase tracking-widest font-bold">
+            <i class="fa-solid fa-list-ul text-lg"></i> <span class="hidden sm:inline">Map</span>
+        </button>
+        
+        <div class="flex items-center gap-8">
+            <button onclick="prevStep()" id="btn-prev" class="text-gray-400 hover:text-sysGreen disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                <i class="fa-solid fa-backward-step text-2xl"></i>
+            </button>
+            <div class="text-center w-24">
+                <span id="current-step-display" class="font-title font-bold text-3xl text-white tracking-widest drop-shadow-[0_0_8px_rgba(29,185,84,0.5)]">01</span>
+                <span class="text-gray-500 font-title text-2xl">/ 34</span>
+            </div>
+            <button onclick="nextStep()" id="btn-next" class="text-white hover:text-sysGreen transition-colors drop-shadow-neon-green disabled:opacity-30">
+                <i class="fa-solid fa-forward-step text-2xl"></i>
+            </button>
+        </div>
+
+        <button onclick="toggleDrawer('tactical-board')" class="text-gray-400 hover:text-sysGreen transition-colors flex items-center gap-3 font-mono text-xs uppercase tracking-widest font-bold">
+            <span class="hidden sm:inline">Board</span> <i class="fa-solid fa-chalkboard text-lg"></i>
+        </button>
+    </footer>
+
+    <!-- ENGINE LOGIC -->
+    <script>
+        let state = { hp: 100, xp: 0, current: 0 };
+        let activeTimer = null;
+        let builtSentences = {};
+
+        const intelDB = {
+            "exercising": { emoji: "🏋️", title: "Exercising", type: "Verb (-ing)", meaning: "Doing physical activity to stay healthy and strong.", example: "I am exercising at the gym.", followUp: "How often do you exercise?" },
+            "cooking": { emoji: "🍳", title: "Cooking", type: "Verb (-ing)", meaning: "Preparing food to eat.", example: "Tim is cooking lunch.", followUp: "What is your favorite food to cook?" },
+            "reading": { emoji: "📖", title: "Reading", type: "Verb (-ing)", meaning: "Looking at words in a book or on a screen to understand them.", example: "She is reading a book.", followUp: "Do you like reading books or watching movies?" },
+            "sleeping": { emoji: "😴", title: "Sleeping", type: "Verb (-ing)", meaning: "Resting with your eyes closed.", example: "Shh! Georgie is sleeping.", followUp: "How many hours do you sleep every night?" },
+            "playing": { emoji: "🎮", title: "Playing", type: "Verb (-ing)", meaning: "Doing an activity for fun, like video games or sports.", example: "He is playing video games.", followUp: "What games do you like playing?" },
+            "watching": { emoji: "📺", title: "Watching", type: "Verb (-ing)", meaning: "Looking at something for a period of time, like a TV or movie.", example: "I am watching TV.", followUp: "What TV show are you watching these days?" }
+        };
+
+        const lessonData = [
+            // 1. INSTRUCTOR
+            {
+                title: "Instructor's Guide",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-8 fade-in">
+                        <div class="game-card p-10 rounded-2xl border-t-4 border-sysGreen">
+                            <span class="inline-block bg-void px-4 text-sysGreen text-xs font-bold uppercase tracking-widest border border-sysGreen/30 rounded-full py-2 mb-6">Teacher Only</span>
+                            <h2 class="font-title font-bold text-4xl mb-6 text-white tracking-widest uppercase">A1: Present Continuous</h2>
+                            <div class="space-y-4 font-body text-gray-300 text-lg">
+                                <p><strong class="text-white">Goal:</strong> Teach the Present Continuous (Verb to be + V-ing) to describe actions happening right now.</p>
+                                <p><strong class="text-white">Context:</strong> "What are you doing?" based on the BBC Learning English video.</p>
+                                <p><strong class="text-white">Design:</strong> Main Series Engine V6 utilizing the Spotify Dark/Green Palette. Includes Interactive Chips for warmups and the full Gauntlet (Time Attack, Constructor, Bug Hunter, etc.).</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 2. COVER
+            {
+                title: "Lesson Start",
+                html: `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-center px-4 fade-in">
+                        <div class="w-full max-w-2xl aspect-video mb-8 rounded-xl shadow-[0_20px_50px_rgba(29,185,84,0.15)] overflow-hidden border border-white/10 relative group">
+                            <img src="https://images.unsplash.com/photo-1556817411-31ae72fa3ea8?auto=format&fit=crop&q=80&w=1000" alt="People doing activities" class="absolute inset-0 w-full h-full object-cover z-10 opacity-60">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center z-20">
+                                <h1 class="font-title font-black text-5xl md:text-7xl text-white tracking-tight drop-shadow-[0_5px_15px_rgba(0,0,0,1)] uppercase">What are you doing?</h1>
+                            </div>
+                        </div>
+                        <p class="text-gray-400 text-xl mb-8 font-mono uppercase tracking-widest">Actions Happening Now</p>
+                        <div class="flex gap-4">
+                            <span class="bg-void text-white border border-white/20 px-6 py-2 rounded text-sm font-bold uppercase tracking-widest">Main Series • A1</span>
+                            <span class="bg-sysGreen/20 text-sysGreen border border-sysGreen/50 px-6 py-2 rounded text-sm font-bold uppercase tracking-widest">BBC English</span>
+                        </div>
+                    </div>
+                `
+            },
+            // 3-5. WARMUPS WITH CHIPS
+            {
+                title: "Warm-up 1",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in flex flex-col items-center">
+                        <div class="text-center mb-8"><h2 class="font-mono font-bold text-sm text-gray-500 uppercase tracking-widest">Let's Talk</h2></div>
+                        <div class="game-card p-12 rounded-2xl text-center w-full shadow-[0_10px_40px_rgba(29,185,84,0.1)] border-t-4 border-sysGreen">
+                            <i class="fa-solid fa-gamepad text-6xl text-white mb-6"></i>
+                            <p class="mb-8 font-title font-bold text-4xl md:text-5xl text-white">What do you like doing in your <span class="text-sysGreen">free time</span>?</p>
+                            
+                            <div class="flex flex-wrap justify-center gap-3 mb-10">
+                                <button onclick="this.classList.toggle('border-sysGreen'); this.classList.toggle('text-sysGreen'); this.classList.toggle('bg-sysGreen/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">📖 Reading</button>
+                                <button onclick="this.classList.toggle('border-sysGreen'); this.classList.toggle('text-sysGreen'); this.classList.toggle('bg-sysGreen/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🎮 Gaming</button>
+                                <button onclick="this.classList.toggle('border-sysGreen'); this.classList.toggle('text-sysGreen'); this.classList.toggle('bg-sysGreen/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">😴 Sleeping</button>
+                                <button onclick="this.classList.toggle('border-sysGreen'); this.classList.toggle('text-sysGreen'); this.classList.toggle('bg-sysGreen/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🍳 Cooking</button>
+                            </div>
+
+                            <div class="stt-box p-6 bg-white/5 text-left rounded-xl">
+                                <span class="text-xs font-mono text-sysGreen block mb-2 uppercase tracking-widest"><i class="fa-solid fa-microphone mr-2"></i>Speak:</span>
+                                <p class="text-white text-xl font-medium italic">"In my free time, I really like..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Warm-up 2",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in flex flex-col items-center">
+                        <div class="text-center mb-8"><h2 class="font-mono font-bold text-sm text-gray-500 uppercase tracking-widest">Let's Talk</h2></div>
+                        <div class="game-card p-12 rounded-2xl text-center w-full border-t-4 border-sysRed">
+                            <i class="fa-solid fa-calendar-week text-6xl text-sysRed mb-6"></i>
+                            <p class="mb-8 font-title font-bold text-4xl md:text-5xl text-white">Are you usually <span class="text-sysRed">busy</span> or relaxed on weekends?</p>
+                            
+                            <div class="flex flex-wrap justify-center gap-3 mb-10">
+                                <button onclick="this.classList.toggle('border-sysRed'); this.classList.toggle('text-sysRed'); this.classList.toggle('bg-sysRed/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🏃‍♂️ Very busy</button>
+                                <button onclick="this.classList.toggle('border-sysRed'); this.classList.toggle('text-sysRed'); this.classList.toggle('bg-sysRed/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🦥 Lazy</button>
+                                <button onclick="this.classList.toggle('border-sysRed'); this.classList.toggle('text-sysRed'); this.classList.toggle('bg-sysRed/10')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">⚽ Active</button>
+                            </div>
+
+                            <div class="stt-box p-6 bg-white/5 text-left rounded-xl" style="border-color: #E22134;">
+                                <span class="text-xs font-mono text-sysRed block mb-2 uppercase tracking-widest"><i class="fa-solid fa-microphone mr-2"></i>Speak:</span>
+                                <p class="text-white text-xl font-medium italic">"On weekends, I am usually..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Warm-up 3",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in flex flex-col items-center">
+                        <div class="text-center mb-8"><h2 class="font-mono font-bold text-sm text-gray-500 uppercase tracking-widest">Let's Talk</h2></div>
+                        <div class="game-card p-12 rounded-2xl text-center w-full border-t-4 border-white">
+                            <i class="fa-solid fa-house-user text-6xl text-white mb-6"></i>
+                            <p class="mb-8 font-title font-bold text-4xl md:text-5xl text-white">Do you prefer <span class="text-gray-300">indoor</span> or outdoor activities?</p>
+                            
+                            <div class="flex flex-wrap justify-center gap-3 mb-10">
+                                <button onclick="this.classList.toggle('border-white'); this.classList.toggle('text-white'); this.classList.toggle('bg-white/20')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🏠 Indoors</button>
+                                <button onclick="this.classList.toggle('border-white'); this.classList.toggle('text-white'); this.classList.toggle('bg-white/20')" class="chip-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-400 font-body font-medium text-sm hover:border-white/30 transition-all select-none">🌳 Outdoors</button>
+                            </div>
+
+                            <div class="stt-box p-6 bg-white/5 text-left rounded-xl border-l-white">
+                                <span class="text-xs font-mono text-gray-400 block mb-2 uppercase tracking-widest"><i class="fa-solid fa-microphone mr-2"></i>Speak:</span>
+                                <p class="text-white text-xl font-medium italic">"I prefer... because..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 6. VOCABULARY INTRO
+            {
+                title: "Vocabulary",
+                html: `
+                    <div class="w-full h-full flex flex-col max-w-5xl mx-auto px-4 py-8 fade-in">
+                        <div class="text-center mb-10">
+                            <h2 class="font-title font-bold text-5xl text-white mb-2 uppercase">The Lexicon</h2>
+                            <p class="text-gray-400 font-mono text-sm uppercase">Click the green words to reveal meanings.</p>
+                        </div>
+                        
+                        <div class="flex-grow game-card p-10 md:p-14 rounded-2xl shadow-2xl flex flex-col justify-center w-full border-l-4 border-sysGreen">
+                            <p class="font-body text-2xl leading-relaxed text-gray-200 mb-6">
+                                Let's learn some common actions. Click to see what they mean:
+                            </p>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-xl mt-4 font-bold">
+                                <div><span class="jit-word" onclick="revealIntel('exercising', this)">Exercising</span></div>
+                                <div><span class="jit-word" onclick="revealIntel('cooking', this)">Cooking</span></div>
+                                <div><span class="jit-word" onclick="revealIntel('reading', this)">Reading</span></div>
+                                <div><span class="jit-word" onclick="revealIntel('sleeping', this)">Sleeping</span></div>
+                                <div><span class="jit-word" onclick="revealIntel('playing', this)">Playing</span></div>
+                                <div><span class="jit-word" onclick="revealIntel('watching', this)">Watching</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 7. PRE-WATCH
+            {
+                title: "Pre-Watch",
+                html: `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-center px-4 fade-in">
+                        <i class="fa-solid fa-video text-7xl text-sysGreen mb-8 drop-shadow-neon-green animate-pulse"></i>
+                        <h2 class="font-title font-bold text-5xl text-white mb-6 uppercase">Observation Protocol</h2>
+                        <p class="font-body text-xl text-gray-400 max-w-2xl mb-12">Watch the video. Listen carefully to how they ask and answer: "What are you doing?"</p>
+                        <button onclick="nextStep()" class="bg-sysGreen/10 border border-sysGreen text-sysGreen font-bold text-xl rounded-lg px-12 py-4 hover:bg-sysGreen hover:text-black transition-all shadow-neon-green uppercase font-mono tracking-widest">Play Video</button>
+                    </div>
+                `
+            },
+            // 8. VIDEO
+            {
+                title: "The Video",
+                html: `
+                    <div class="w-full max-w-5xl mx-auto px-4 py-8 fade-in h-full flex flex-col justify-center">
+                        <div class="relative w-full aspect-video rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 bg-black">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/aiUGN3TDvw4?start=0&rel=0&modestbranding=1" title="BBC English Video" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-center text-gray-500 mt-6 font-mono text-sm uppercase tracking-widest">BBC Learning English</p>
+                    </div>
+                `
+            },
+            // 9. POST-WATCH ANALYSIS
+            {
+                title: "Comprehension",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in flex flex-col items-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase">Video Analysis</h2>
+                        <div class="game-card p-12 rounded-2xl w-full text-left shadow-xl border-t-4 border-sysGreen">
+                            <p class="font-body text-2xl text-white mb-8">What is Tim doing in the kitchen?</p>
+                            <div class="bg-black/50 p-6 rounded-xl border border-white/10 mb-8">
+                                <p class="text-white text-xl">Tim is <strong class="text-sysGreen">cooking</strong>!</p>
+                            </div>
+                            <div class="stt-box p-6 bg-white/5 rounded-xl border-sysGreen">
+                                <span class="text-xs font-mono text-sysGreen block mb-2 uppercase tracking-widest"><i class="fa-solid fa-microphone mr-2"></i>Speak:</span>
+                                <p class="text-white text-xl font-medium italic">"What is Buli doing? He is..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 10-12. GRAMMAR
+            {
+                title: "Grammar: I am",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in">
+                        <div class="text-center mb-10">
+                            <h2 class="font-title font-bold text-5xl text-white mb-4 uppercase">Happening Now</h2>
+                            <p class="text-gray-400 font-medium text-lg">Present Continuous</p>
+                        </div>
+                        <h3 class="font-bold text-2xl text-sysGreen mb-6 font-mono border-b border-white/10 pb-4">1. I am + ING 🙋‍♂️</h3>
+                        <div class="game-card p-10 rounded-2xl shadow-xl">
+                            <p class="text-xl text-white/80 mb-6 font-medium">To talk about actions happening <strong class="text-sysGreen">right now</strong>, use 'am' and add '-ing' to the verb.</p>
+                            <div class="bg-black/30 p-8 rounded-xl border border-white/5 mb-8 flex flex-col items-center text-center">
+                                <p class="text-3xl font-bold text-white mb-4">"I <span class="text-sysGreen">am</span> cook<span class="text-sysGreen">ing</span>."</p>
+                                <p class="text-3xl font-bold text-white mb-4">"I <span class="text-sysGreen">am</span> exercis<span class="text-sysGreen">ing</span>."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Grammar: He/She/It",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in">
+                        <div class="text-center mb-10">
+                            <h2 class="font-title font-bold text-5xl text-white mb-4 uppercase">Happening Now</h2>
+                        </div>
+                        <h3 class="font-bold text-2xl text-white mb-6 font-mono border-b border-white/10 pb-4">2. He / She / It is + ING 🧑‍🤝‍🧑</h3>
+                        <div class="game-card p-10 rounded-2xl shadow-xl border-l-4 border-white">
+                            <p class="text-xl text-white/80 mb-6 font-medium">For other people, use 'is' or 'are' + verb-ing.</p>
+                            <div class="bg-black/30 p-8 rounded-xl border border-white/5 mb-8 flex flex-col items-center text-center">
+                                <p class="text-3xl font-bold text-white mb-4">"He <span class="text-white border-b-2 border-sysGreen pb-1">is</span> sleep<span class="text-sysGreen">ing</span>."</p>
+                                <p class="text-3xl font-bold text-white mb-4">"They <span class="text-white border-b-2 border-sysGreen pb-1">are</span> play<span class="text-sysGreen">ing</span>."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Grammar: Questions",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in">
+                        <div class="text-center mb-10">
+                            <h2 class="font-title font-bold text-5xl text-white mb-4 uppercase">Asking Questions</h2>
+                        </div>
+                        <h3 class="font-bold text-2xl text-blue-400 mb-6 font-mono border-b border-white/10 pb-4">3. What are you doing? ❓</h3>
+                        <div class="game-card p-10 rounded-2xl shadow-xl border-l-4 border-blue-400">
+                            <p class="text-xl text-white/80 mb-6 font-medium">To ask a question, we swap the order!</p>
+                            <div class="bg-black/30 p-8 rounded-xl border border-white/5 mb-8 flex flex-col items-center text-center">
+                                <p class="text-3xl font-bold text-white mb-4">"What <span class="text-blue-400">are</span> you <span class="text-blue-400">doing</span>?"</p>
+                                <p class="text-white/70 text-lg">"I am reading a book."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 13-22. GAUNTLET DRILLS
+            {
+                title: "Practice: Time Attack 1",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysRed mb-4 uppercase"><i class="fa-solid fa-stopwatch mr-3"></i>Time Attack</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Decide quickly before the time runs out.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-sysRed" id="drill-1">
+                            <div class="timer-track" id="timer-bg-1"><div class="timer-fill" id="timer-bar-1"></div></div>
+                            
+                            <p class="text-3xl font-body text-white mb-12">"I _____ reading a book."</p>
+                            <div class="grid grid-cols-2 gap-6">
+                                <button onclick="checkTimeAttack(this, false, 1)" class="combat-btn text-white p-6 font-bold text-2xl" id="btn1-1">are</button>
+                                <button onclick="checkTimeAttack(this, true, 1)" class="combat-btn text-white p-6 font-bold text-2xl" id="btn1-2">am</button>
+                            </div>
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-1">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Excellent!</p>
+                                <p class="text-gray-300">I am.</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => { startTimer(1, 8); }
+            },
+            {
+                title: "Practice: Time Attack 2",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysRed mb-4 uppercase"><i class="fa-solid fa-stopwatch mr-3"></i>Time Attack</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Decide quickly before the time runs out.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-sysRed" id="drill-2">
+                            <div class="timer-track" id="timer-bg-2"><div class="timer-fill" id="timer-bar-2"></div></div>
+                            
+                            <p class="text-3xl font-body text-white mb-12">"She _____ sleeping."</p>
+                            <div class="grid grid-cols-2 gap-6">
+                                <button onclick="checkTimeAttack(this, true, 2)" class="combat-btn text-white p-6 font-bold text-2xl" id="btn2-1">is</button>
+                                <button onclick="checkTimeAttack(this, false, 2)" class="combat-btn text-white p-6 font-bold text-2xl" id="btn2-2">are</button>
+                            </div>
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-2">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Perfect!</p>
+                                <p class="text-gray-300">She is.</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => { startTimer(2, 8); }
+            },
+            {
+                title: "Practice: True or False",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysGreen mb-4 uppercase"><i class="fa-solid fa-check-double mr-3"></i>True or False?</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Is this sentence grammatically correct?</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl" id="drill-3">
+                            <div class="bg-black/60 border border-white/10 p-10 mb-10 rounded-xl">
+                                <p class="text-3xl font-body text-white">"I <span class="text-sysRed font-bold">am cook</span>."</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <button onclick="checkAuth(this, false, 3)" class="auth-valid border border-white/20 text-white p-6 rounded-xl font-bold text-xl transition-all uppercase">
+                                    <i class="fa-solid fa-check text-sysGreen block text-3xl mb-2"></i> Correct
+                                </button>
+                                <button onclick="checkAuth(this, true, 3)" class="auth-corrupt border border-white/20 text-white p-6 rounded-xl font-bold text-xl transition-all uppercase">
+                                    <i class="fa-solid fa-xmark text-sysRed block text-3xl mb-2"></i> Incorrect
+                                </button>
+                            </div>
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-3">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Good catch!</p>
+                                <p class="text-gray-300">It should be: "I am <strong class="text-white">cooking</strong>."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Practice: True or False 2",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysGreen mb-4 uppercase"><i class="fa-solid fa-check-double mr-3"></i>True or False?</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Is this sentence grammatically correct?</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl" id="drill-4">
+                            <div class="bg-black/60 border border-white/10 p-10 mb-10 rounded-xl">
+                                <p class="text-3xl font-body text-white">"They <span class="text-sysGreen font-bold">are playing</span>."</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <button onclick="checkAuth(this, true, 4)" class="auth-valid border border-white/20 text-white p-6 rounded-xl font-bold text-xl transition-all uppercase">
+                                    <i class="fa-solid fa-check text-sysGreen block text-3xl mb-2"></i> Correct
+                                </button>
+                                <button onclick="checkAuth(this, false, 4)" class="auth-corrupt border border-white/20 text-white p-6 rounded-xl font-bold text-xl transition-all uppercase">
+                                    <i class="fa-solid fa-xmark text-sysRed block text-3xl mb-2"></i> Incorrect
+                                </button>
+                            </div>
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-4">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Correct!</p>
+                                <p class="text-gray-300">They + are + verb-ing.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Practice: Constructor",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-white mb-4 uppercase"><i class="fa-solid fa-cubes mr-3"></i>Sentence Builder</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Put the words in the correct order to make a question.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-white" id="drill-5">
+                            <div id="build-zone-5" class="build-slot bg-black/50 rounded-xl flex flex-wrap items-center gap-3 p-6 mb-10 w-full min-h-[100px]"></div>
+                            
+                            <div id="bank-5" class="flex flex-wrap justify-center gap-4"></div>
+
+                            <button id="btn-check-5" onclick="checkBuilder(5, 'What are you doing?')" class="mt-10 px-10 py-4 border-2 border-white text-white hover:bg-white hover:text-black font-bold uppercase transition-all opacity-50 pointer-events-none rounded-full">Check Answer</button>
+
+                            <div class="stt-box p-6 mt-8 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-5">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Perfect!</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => { initBuilder(5, ["you", "What", "doing?", "are"]); }
+            },
+            {
+                title: "Practice: Constructor 2",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-white mb-4 uppercase"><i class="fa-solid fa-cubes mr-3"></i>Sentence Builder</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Put the words in the correct order.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-white" id="drill-6">
+                            <div id="build-zone-6" class="build-slot bg-black/50 rounded-xl flex flex-wrap items-center gap-3 p-6 mb-10 w-full min-h-[100px]"></div>
+                            
+                            <div id="bank-6" class="flex flex-wrap justify-center gap-4"></div>
+
+                            <button id="btn-check-6" onclick="checkBuilder(6, 'He is watching TV.')" class="mt-10 px-10 py-4 border-2 border-white text-white hover:bg-white hover:text-black font-bold uppercase transition-all opacity-50 pointer-events-none rounded-full">Check Answer</button>
+
+                            <div class="stt-box p-6 mt-8 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-6">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Nailed it!</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => { initBuilder(6, ["watching", "He", "TV.", "is"]); }
+            },
+            {
+                title: "Practice: Word Selector",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysGreen mb-4 uppercase"><i class="fa-solid fa-arrows-spin mr-3"></i>Word Selector</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Click the button to change the action word.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl" id="drill-7">
+                            <p class="text-xl text-gray-300 mb-8 font-body">"I am ____________ a book."</p>
+                            
+                            <div class="flex items-center justify-center gap-4 mb-10">
+                                <button id="slot-7" class="slot-btn px-8 py-4 rounded-xl" onclick="cycleSlot('slot-7', ['sleeping', 'exercising', 'reading', 'cooking'])">sleeping</button>
+                            </div>
+                            
+                            <button id="lock-7" onclick="checkSlot('slot-7', 'reading', 7)" class="px-10 py-4 border border-white/20 text-white hover:border-sysGreen hover:text-sysGreen font-bold uppercase transition-all rounded-full shadow-neon-green">Confirm</button>
+
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-7">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Correct!</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Practice: Word Selector 2",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysGreen mb-4 uppercase"><i class="fa-solid fa-arrows-spin mr-3"></i>Word Selector</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Click the button to change the action word.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl" id="drill-8">
+                            <p class="text-xl text-gray-300 mb-8 font-body">"She is ____________ breakfast."</p>
+                            
+                            <div class="flex items-center justify-center gap-4 mb-10">
+                                <button id="slot-8" class="slot-btn px-8 py-4 rounded-xl" onclick="cycleSlot('slot-8', ['reading', 'eating', 'watching', 'playing'])">reading</button>
+                            </div>
+                            
+                            <button id="lock-8" onclick="checkSlot('slot-8', 'eating', 8)" class="px-10 py-4 border border-white/20 text-white hover:border-sysGreen hover:text-sysGreen font-bold uppercase transition-all rounded-full shadow-neon-green">Confirm</button>
+
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-8">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Great job!</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Practice: Find the Mistake",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysRed mb-4 uppercase"><i class="fa-solid fa-bug mr-3"></i>Find the Mistake</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Click the word that is WRONG.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-sysRed" id="drill-9">
+                            <div class="bg-black/50 p-8 rounded-xl border border-white/10 mb-10 text-3xl font-body text-white leading-loose shadow-inner">
+                                "We <span class="bug-word" onclick="checkBug(this, true, 9)">is</span> <span class="bug-word" onclick="checkBug(this, false, 9)">exercising.</span>"
+                            </div>
+
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-9">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Mistake Found!</p>
+                                <p class="text-gray-300">With 'We', we use 'are': "We <strong class="text-white">are</strong> exercising."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Practice: Find the Mistake 2",
+                html: `
+                    <div class="w-full max-w-3xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-4xl text-sysRed mb-4 uppercase"><i class="fa-solid fa-bug mr-3"></i>Find the Mistake</h2>
+                        <p class="font-mono text-gray-400 mb-8 text-sm">Click the word with bad grammar.</p>
+                        
+                        <div class="game-card p-12 rounded-2xl shadow-2xl border-t-4 border-sysRed" id="drill-10">
+                            <div class="bg-black/50 p-8 rounded-xl border border-white/10 mb-10 text-3xl font-body text-white leading-loose shadow-inner">
+                                "I <span class="bug-word" onclick="checkBug(this, false, 10)">am</span> <span class="bug-word" onclick="checkBug(this, true, 10)">play</span> <span class="bug-word" onclick="checkBug(this, false, 10)">games.</span>"
+                            </div>
+
+                            <div class="stt-box p-6 mt-10 hidden slide-up text-left bg-black/40 rounded-xl border-sysGreen" id="fb-10">
+                                <p class="text-sysGreen font-bold text-xl mb-1">Mistake Found!</p>
+                                <p class="text-gray-300">Don't forget the -ing: "I am <strong class="text-white">playing</strong>."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 23-25. PRONUNCIATION
+            {
+                title: "Pronunciation: Whatcha doin?",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase border-b border-white/10 pb-6">Connected Speech</h2>
+                        <div class="game-card p-12 rounded-3xl mb-10 shadow-2xl">
+                            <p class="text-2xl text-gray-300 mb-10 font-body">In native English, "What are you doing?" sounds very different when spoken fast.</p>
+                            <div class="flex justify-around items-center mt-8">
+                                <div class="text-center">
+                                    <p class="text-4xl font-bold text-white mb-4 line-through decoration-sysRed decoration-4">What are you doing?</p>
+                                    <p class="text-sysGreen font-mono text-5xl font-black drop-shadow-neon-green">"Whatcha doin'?"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Pronunciation: Dropping G",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase border-b border-white/10 pb-6">Dropping the G</h2>
+                        <div class="game-card p-12 rounded-3xl mb-10 shadow-2xl">
+                            <p class="text-2xl text-gray-300 mb-10 font-body">Often, people don't pronounce the 'g' at the end of '-ing' words.</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div class="bg-black/40 p-4 rounded text-center">
+                                    <p class="text-xl font-bold">Cooking</p>
+                                    <p class="text-sysGreen font-mono text-sm mt-2">Cookin'</p>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded text-center">
+                                    <p class="text-xl font-bold">Reading</p>
+                                    <p class="text-sysGreen font-mono text-sm mt-2">Readin'</p>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded text-center border-2 border-sysRed">
+                                    <p class="text-xl font-bold">Sleepin<span class="text-sysRed line-through opacity-50">g</span></p>
+                                    <p class="text-sysGreen font-mono text-sm mt-2">Sleepin'</p>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded text-center">
+                                    <p class="text-xl font-bold">Playing</p>
+                                    <p class="text-sysGreen font-mono text-sm mt-2">Playin'</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Pronunciation: Practice",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase">Practice Time!</h2>
+                        <div class="stt-box p-12 game-card rounded-3xl shadow-xl">
+                            <span class="text-sm text-sysGreen font-bold uppercase tracking-widest block mb-6 drop-shadow-sm">Read out loud fast:</span>
+                            <p class="text-white text-4xl font-bold mb-8">"<span class="text-sysGreen">Whatcha doin'</span>?"</p>
+                            <p class="text-white text-4xl font-bold">"I'm <span class="text-sysGreen">cookin'</span> right now."</p>
+                        </div>
+                    </div>
+                `
+            },
+            // 26-28. SLIDERS (Personality/Habits)
+            {
+                title: "Your Vibe: Productivity",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-12 uppercase">How are you today?</h2>
+                        <div class="game-card p-14 rounded-3xl shadow-2xl">
+                            <div class="flex justify-between font-body font-bold text-xl md:text-2xl mb-12">
+                                <span class="text-white drop-shadow-md">Very Lazy 🦥</span>
+                                <span class="text-white drop-shadow-md">Very Productive ⚡</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="50" class="shadow-lg">
+                            <div class="stt-box p-8 mt-16 text-left game-card rounded-2xl">
+                                <span class="text-xs font-mono text-gray-400 font-bold uppercase tracking-widest block mb-3">Speak:</span>
+                                <p class="text-white text-2xl font-medium font-body italic">"Today, I feel very... because I am..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Your Vibe: Night Routine",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-12 uppercase">At Night...</h2>
+                        <div class="game-card p-14 rounded-3xl shadow-2xl border-t-4 border-sysRed">
+                            <div class="flex justify-between font-body font-bold text-xl md:text-2xl mb-12">
+                                <span class="text-sysRed drop-shadow-md">I am sleeping 😴</span>
+                                <span class="text-white drop-shadow-md">I am playing games 🎮</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="50" class="shadow-lg" style="background: rgba(226,33,52,0.2);">
+                            <div class="stt-box p-8 mt-16 text-left game-card rounded-2xl border-l-sysRed">
+                                <span class="text-xs font-mono text-sysRed font-bold uppercase tracking-widest block mb-3">Speak:</span>
+                                <p class="text-white text-2xl font-medium font-body italic">"At 11 PM, I am usually..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Your Vibe: Morning Routine",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-16 fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-12 uppercase">In the Morning...</h2>
+                        <div class="game-card p-14 rounded-3xl shadow-2xl border-t-4 border-white">
+                            <div class="flex justify-between font-body font-bold text-xl md:text-2xl mb-12">
+                                <span class="text-white drop-shadow-md">I am eating breakfast 🥐</span>
+                                <span class="text-gray-400 drop-shadow-md">I am exercising 🏃‍♂️</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="50" class="shadow-lg" style="background: rgba(255,255,255,0.2);">
+                            <div class="stt-box p-8 mt-16 text-left game-card rounded-2xl border-l-white">
+                                <span class="text-xs font-mono text-gray-300 font-bold uppercase tracking-widest block mb-3">Speak:</span>
+                                <p class="text-white text-2xl font-medium font-body italic">"In the morning, I prefer to be..."</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 29-32. SPEAKING
+            {
+                title: "Speaking: Interview",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <i class="fa-solid fa-microphone-lines text-7xl text-sysGreen mb-8 drop-shadow-neon-green"></i>
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase">Interview the Teacher</h2>
+                        <div class="game-card p-12 rounded-3xl text-left border-l-4 border-sysGreen shadow-[0_0_40px_rgba(29,185,84,0.15)]">
+                            <p class="text-gray-300 text-2xl mb-8 font-body">Ask your teacher these questions:</p>
+                            <ul class="space-y-6 text-white text-2xl font-body font-bold ml-6">
+                                <li>👉 What <span class="text-sysGreen">are</span> you <span class="text-sysGreen">doing</span> right now?</li>
+                                <li>👉 What <span class="text-sysGreen">are</span> you <span class="text-sysGreen">eating</span> for lunch today?</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Speaking: The Mime",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <i class="fa-solid fa-masks-theater text-7xl text-white mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]"></i>
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase">The Mime Game</h2>
+                        <div class="game-card p-12 rounded-3xl text-left shadow-2xl border-l-4 border-white">
+                            <p class="text-gray-300 text-2xl mb-8 font-body">Act out one of the actions from the lesson (Cooking, Reading, Exercising, Sleeping, Playing).</p>
+                            <p class="text-white text-xl font-body mb-6">Your teacher will try to guess what you are doing!</p>
+                            <div class="bg-black/50 p-6 rounded-xl border border-white/10 mb-8">
+                                <p class="text-white text-2xl font-body italic">Teacher: "Are you cooking?"</p>
+                                <p class="text-white text-2xl font-body italic mt-2">You: "Yes, I am!" or "No, I am not!"</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Speaking: Reverse Mime",
+                html: `
+                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in text-center">
+                        <i class="fa-solid fa-repeat text-7xl text-sysGreen mb-8 drop-shadow-[0_0_20px_rgba(29,185,84,0.3)]"></i>
+                        <h2 class="font-title font-bold text-5xl text-white mb-10 uppercase">Reverse Mime</h2>
+                        <div class="game-card p-12 rounded-3xl text-left shadow-2xl border-l-4 border-sysGreen">
+                            <p class="text-white text-2xl mb-8 font-body">Now it's your turn to guess.</p>
+                            <p class="text-gray-300 text-xl font-body mb-6">The teacher will act out an action. Ask them what they are doing.</p>
+                            <div class="stt-box p-6 bg-black/40 rounded-xl border-sysGreen">
+                                <p class="text-white text-2xl font-body italic">"Are you... reading a book?"</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 32. INTERACTIVE GIG (RPG)
+            {
+                title: "Interactive Story",
+                html: `
+                    <div class="w-full max-w-5xl mx-auto px-4 py-12 flex flex-col h-full items-center justify-center fade-in text-center">
+                        <h2 class="font-title font-bold text-5xl text-white mb-4 uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"><i class="fa-solid fa-sun mr-3"></i>The Perfect Sunday</h2>
+                        <p class="font-mono text-gray-400 mb-10 uppercase text-sm">Your choices affect your Focus (HP) and Fluency (XP).</p>
+                        
+                        <div id="narrative-gameplay" class="w-full bg-black/60 border border-white/30 shadow-[0_0_40px_rgba(255,255,255,0.1)] p-12 rounded-2xl min-h-[450px] flex flex-col justify-between">
+                            <!-- Content injected via playNarrative() -->
+                        </div>
+                    </div>
+                `,
+                onLoad: () => playNarrative('start')
+            },
+            // 33. FINAL
+            {
+                title: "Lesson Complete",
+                html: `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-center px-4 fade-in">
+                        <i class="fa-solid fa-check-double text-8xl text-sysGreen mb-8 drop-shadow-[0_0_30px_rgba(29,185,84,0.5)]"></i>
+                        <h1 class="font-title font-black text-6xl md:text-8xl text-white mb-6 drop-shadow-lg uppercase">Module Complete</h1>
+                        <p class="text-white/70 text-2xl mb-12 font-mono font-medium uppercase tracking-widest">You have learned the Present Continuous.</p>
+                        
+                        <div class="flex gap-16 mb-16 game-card p-10 rounded-3xl shadow-2xl border border-white/10">
+                            <div class="flex flex-col items-center">
+                                <span class="text-white/50 text-sm uppercase tracking-widest font-bold mb-3 font-mono">Focus (HP)</span>
+                                <span id="final-hp" class="text-white text-5xl font-black drop-shadow-md font-body">100%</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="text-sysGreen text-sm uppercase tracking-widest font-bold mb-3 font-mono">Fluency (XP)</span>
+                                <span id="final-xp" class="text-white text-5xl font-black drop-shadow-md font-body">0</span>
+                            </div>
+                        </div>
+                        <button onclick="location.reload()" class="bg-sysGreen/10 border border-sysGreen text-sysGreen font-bold text-xl rounded-lg px-16 py-5 hover:bg-sysGreen hover:text-black transition-all shadow-[0_0_20px_rgba(29,185,84,0.4)] uppercase font-mono tracking-widest">Restart Lesson</button>
+                    </div>
+                `,
+                onLoad: () => {
+                    document.getElementById('final-hp').innerText = state.hp + "%";
+                    document.getElementById('final-xp').innerText = state.xp;
+                }
+            }
+        ];
+
+        // --- NARRATIVE RPG LOGIC ---
+        const narrativeNodes = {
+            start: {
+                text: "It is Sunday morning. You just woke up. You look out the window and the sun is shining. What are you doing?",
+                choices: [
+                    { label: "STAY IN BED", text: "I am sleeping a little more.", next: "sleep" },
+                    { label: "GET UP", text: "I am exercising.", next: "exercise" }
+                ]
+            },
+            sleep: {
+                text: "You stayed in bed. Now it's 1 PM. You feel very lazy and hungry. (-20 Focus)",
+                isEnd: true,
+                stt: "Is it good to sleep until late on Sundays?",
+                action: () => { takeDamage(20); }
+            },
+            exercise: {
+                text: "You exercised! You feel great. Now you are cooking a delicious breakfast. (+50 Fluency XP)",
+                isEnd: true,
+                stt: "What is your perfect Sunday morning routine?",
+                action: () => { gainXP(50); }
+            }
+        };
+
+        function playNarrative(nodeId) {
+            const container = document.getElementById('narrative-gameplay');
+            const node = narrativeNodes[nodeId];
+
+            if (node.isEnd) {
+                container.innerHTML = `
+                    <div class="text-center fade-in flex flex-col h-full justify-center">
+                        <i class="fa-solid fa-flag-checkered text-6xl text-white mb-8 animate-pulse drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]"></i>
+                        <h3 class="font-title font-bold text-4xl text-white mb-6 uppercase">RESULT</h3>
+                        <p class="text-2xl text-gray-300 font-body leading-relaxed max-w-2xl mx-auto border-l-4 border-white pl-6">${node.text}</p>
+                        
+                        <div class="mt-12 bg-white/5 border border-white/10 p-6 rounded-xl text-left w-full">
+                            <span class="text-xs font-mono text-sysGreen block mb-2 uppercase tracking-widest">> Follow-up Discussion:</span>
+                            <p class="text-xl text-white italic font-body">"${node.stt}"</p>
+                        </div>
+                    </div>
+                `;
+                if(node.action) node.action();
+            } else {
+                let buttonsHTML = node.choices.map(c => `
+                    <button onclick="playNarrative('${c.next}')" class="flex flex-col items-center justify-center p-8 border border-white/10 bg-panel hover:bg-white/5 hover:border-white transition-all group gap-6 rounded-xl w-full">
+                        <div class="text-center mt-auto">
+                            <span class="font-title font-bold text-2xl text-white block mb-2 uppercase group-hover:text-sysGreen transition-colors">${c.label}</span>
+                            <span class="text-base font-body text-gray-400 italic px-4">"${c.text}"</span>
+                        </div>
+                    </button>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="fade-in flex flex-col h-full">
+                        <p class="font-body text-2xl md:text-3xl text-white mb-12 leading-relaxed border-l-4 border-white pl-8">${node.text}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-auto">
+                            ${buttonsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- ENGINE LOGIC ---
+
+        function startTimer(drillNum, seconds) {
+            if(activeTimer) clearTimeout(activeTimer);
+            let bar = document.getElementById('timer-bar-' + drillNum);
+            let btn1 = document.getElementById('btn' + drillNum + '-1');
+            let btn2 = document.getElementById('btn' + drillNum + '-2');
+            
+            if(bar) {
+                bar.style.animation = 'none';
+                void bar.offsetWidth;
+                bar.classList.add('timer-anim');
+            }
+            
+            activeTimer = setTimeout(() => {
+                if(btn1 && !btn1.disabled) {
+                    takeDamage(20);
+                    let drillDiv = document.getElementById('drill-' + drillNum);
+                    drillDiv.classList.add('damage-flash');
+                    setTimeout(() => drillDiv.classList.remove('damage-flash'), 400);
+                    
+                    btn1.disabled = true; btn2.disabled = true;
+                    btn1.style.opacity = '0.3'; btn2.style.opacity = '0.3';
+                    
+                    let fb = document.getElementById('fb-' + drillNum);
+                    if(fb) {
+                        fb.classList.remove('hidden');
+                        fb.querySelector('p').innerText = "TIME IS UP";
+                        fb.querySelector('p').classList.replace('text-sysGreen', 'text-sysRed');
+                    }
+                }
+            }, seconds * 1000);
+        }
+
+        function checkTimeAttack(btn, isCorrect, num) {
+            if(activeTimer) clearTimeout(activeTimer);
+            let bar = document.getElementById('timer-bar-' + num);
+            if(bar) { bar.style.animationPlayState = 'paused'; }
+            
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => { b.disabled = true; if(b !== btn) b.style.opacity = '0.3'; });
+            
+            if (isCorrect) {
+                btn.classList.add('correct');
+                gainXP(30);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+            } else {
+                btn.classList.add('wrong');
+                takeDamage(20);
+                setTimeout(() => {
+                    btns.forEach(b => { if(!b.classList.contains('wrong')){ b.disabled = false; b.style.opacity = '1'; } });
+                    if(bar) bar.style.animationPlayState = 'running';
+                }, 600);
+            }
+        }
+
+        function checkAuth(btn, isValidSyntax, num) {
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => { b.disabled = true; if(b !== btn) b.style.opacity = '0.3'; });
+
+            if (isValidSyntax) {
+                btn.classList.add('correct'); 
+                btn.style.background = btn.classList.contains('auth-valid') ? 'rgba(29, 185, 84, 0.2)' : 'rgba(226, 33, 52, 0.2)';
+                gainXP(20);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+            } else {
+                btn.classList.add('wrong');
+                takeDamage(15);
+                setTimeout(() => {
+                    btns.forEach(b => { if(!b.classList.contains('wrong')){ b.disabled = false; b.style.opacity = '1'; } });
+                }, 600);
+            }
+        }
+
+        function initBuilder(num, wordsArray) {
+            builtSentences[num] = [];
+            let bank = document.getElementById('bank-' + num);
+            let zone = document.getElementById('build-zone-' + num);
+            let checkBtn = document.getElementById('btn-check-' + num);
+            
+            zone.innerHTML = '';
+            checkBtn.classList.add('opacity-50', 'pointer-events-none');
+
+            wordsArray.sort(() => Math.random() - 0.5);
+            
+            bank.innerHTML = wordsArray.map((w, i) => 
+                `<button id="word-${num}-${i}" onclick="addToBuilder('${w}', ${num}, this.id)" class="build-word bg-panel border border-white/20 text-white px-4 py-2 font-mono shadow-[0_0_10px_rgba(255,255,255,0.1)]">${w}</button>`
+            ).join('');
+        }
+
+        function addToBuilder(word, num, btnId) {
+            builtSentences[num].push(word);
+            document.getElementById(btnId).style.visibility = 'hidden';
+            
+            let zone = document.getElementById('build-zone-' + num);
+            let newBtn = document.createElement('button');
+            newBtn.className = "bg-white text-black px-4 py-2 rounded-lg font-mono font-bold";
+            newBtn.innerText = word;
+            newBtn.onclick = function() {
+                let idx = builtSentences[num].lastIndexOf(word);
+                if(idx > -1) builtSentences[num].splice(idx, 1);
+                zone.removeChild(this);
+                document.getElementById(btnId).style.visibility = 'visible';
+                
+                document.getElementById('btn-check-' + num).classList.add('opacity-50', 'pointer-events-none');
+                zone.classList.remove('complete-correct', 'complete-wrong');
+            };
+            
+            zone.appendChild(newBtn);
+
+            let bankTotal = document.getElementById('bank-' + num).children.length;
+            if(builtSentences[num].length === bankTotal) {
+                document.getElementById('btn-check-' + num).classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function checkBuilder(num, correctSentence) {
+            let currentSentence = builtSentences[num].join(" ");
+            let zone = document.getElementById('build-zone-' + num);
+            
+            if(currentSentence === correctSentence) {
+                zone.classList.add('complete-correct');
+                zone.classList.remove('complete-wrong');
+                gainXP(40);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+                
+                Array.from(zone.children).forEach(c => c.onclick = null);
+                document.getElementById('btn-check-' + num).style.display = 'none';
+            } else {
+                zone.classList.add('complete-wrong');
+                takeDamage(15);
+                let drillDiv = document.getElementById(`drill-${num}`);
+                drillDiv.classList.add('damage-flash');
+                setTimeout(() => {
+                    drillDiv.classList.remove('damage-flash');
+                    zone.classList.remove('complete-wrong');
+                }, 500);
+            }
+        }
+
+        let slotData = {};
+        function cycleSlot(btnId, arrayWords) {
+            if(!slotData[btnId]) slotData[btnId] = 0;
+            slotData[btnId]++;
+            if(slotData[btnId] >= arrayWords.length) slotData[btnId] = 0;
+            document.getElementById(btnId).innerText = arrayWords[slotData[btnId]];
+        }
+
+        function checkSlot(btnId, correctWord, num) {
+            let btn = document.getElementById(btnId);
+            if(btn.innerText === correctWord) {
+                btn.classList.add('locked');
+                document.getElementById('lock-' + num).style.display = 'none';
+                gainXP(20);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+            } else {
+                takeDamage(15);
+                let drillDiv = document.getElementById(`drill-${num}`);
+                drillDiv.classList.add('damage-flash');
+                setTimeout(() => drillDiv.classList.remove('damage-flash'), 500);
+            }
+        }
+
+        function checkBug(el, isBug, num) {
+            if(el.parentElement.classList.contains('locked')) return;
+
+            if(isBug) {
+                el.classList.add('bug-found');
+                el.parentElement.classList.add('locked');
+                
+                Array.from(el.parentElement.children).forEach(child => {
+                    if(child !== el) child.classList.add('bug-wrong');
+                });
+
+                gainXP(30);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+            } else {
+                takeDamage(10);
+                let drillDiv = document.getElementById(`drill-${num}`);
+                drillDiv.classList.add('damage-flash');
+                setTimeout(() => drillDiv.classList.remove('damage-flash'), 400);
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        }
+
+        function updateHUD() {
+            document.getElementById('hp-text').innerText = state.hp;
+            document.getElementById('hp-bar').style.width = state.hp + "%";
+            document.getElementById('xp-text').innerText = state.xp;
+        }
+
+        function takeDamage(amount) {
+            state.hp = Math.max(0, state.hp - amount);
+            updateHUD();
+            document.body.classList.add('damage-flash');
+            setTimeout(() => document.body.classList.remove('damage-flash'), 400);
+            if (state.hp <= 0) { 
+                alert("OUT OF FOCUS. Please restart the lesson."); 
+                location.reload(); 
+            }
+        }
+
+        function gainXP(amount) { state.xp += amount; updateHUD(); }
+
+        function renderMap() {
+            const container = document.getElementById('map-nodes');
+            container.innerHTML = lessonData.map((step, i) => {
+                let color = i === state.current ? 'text-sysGreen font-bold' : (i < state.current ? 'text-white' : 'text-gray-500');
+                return `
+                <div class="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-white/5 transition-colors" onclick="jumpTo(${i})">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono w-4 text-right ${i === state.current ? 'text-sysGreen' : 'text-gray-500'}">${i + 1}</span>
+                        <span class="text-sm font-body ${color}">${step.title}</span>
+                    </div>
+                    ${i === state.current ? '<i class="fa-solid fa-play text-sysGreen text-xs"></i>' : ''}
+                </div>
+            `}).join('');
+        }
+
+        function renderStep() {
+            closeJIT();
+            if(activeTimer) clearTimeout(activeTimer);
+            const stage = document.getElementById('engine-stage');
+            stage.innerHTML = lessonData[state.current].html;
+            
+            let displayNum = state.current + 1;
+            document.getElementById('current-step-display').innerText = displayNum < 10 ? `0${displayNum}` : displayNum;
+            document.getElementById('btn-prev').disabled = state.current === 0;
+            document.getElementById('btn-next').disabled = state.current === lessonData.length - 1;
+            
+            if (lessonData[state.current].onLoad) lessonData[state.current].onLoad();
+            renderMap();
+            updateHUD();
+        }
+
+        function nextStep() { if (state.current < lessonData.length - 1) { state.current++; renderStep(); } }
+        function prevStep() { if (state.current > 0) { state.current--; renderStep(); } }
+        function jumpTo(idx) { state.current = idx; renderStep(); toggleDrawer('lesson-map'); }
+
+        function toggleDrawer(id) {
+            const drawers = ['lesson-map', 'jit-panel', 'tactical-board'];
+            drawers.forEach(drawerId => {
+                const drawer = document.getElementById(drawerId);
+                if (!drawer) return;
+                
+                if (drawerId === id) {
+                    if (drawer.classList.contains('translate-x-full') || drawer.classList.contains('-translate-x-full')) {
+                        drawer.classList.remove('translate-x-full', '-translate-x-full');
+                    } else {
+                        if (id === 'lesson-map') drawer.classList.add('-translate-x-full');
+                        else drawer.classList.add('translate-x-full');
+                    }
+                } else {
+                    if (drawerId === 'lesson-map') drawer.classList.add('-translate-x-full');
+                    else drawer.classList.add('translate-x-full');
+                }
+            });
+        }
+
+        function clearNotes() {
+            document.getElementById('t-notes').value = '';
+            document.getElementById('t-notes').focus();
+        }
+
+        function revealIntel(key, el = null) {
+            const data = intelDB[key];
+            if (!data) return;
+            
+            if (el) {
+                document.querySelectorAll('.jit-word').forEach(r => r.classList.remove('active'));
+                el.classList.add('active');
+            }
+            
+            document.getElementById('jit-content').innerHTML = `
+                <div class="flex flex-col items-center text-center mb-8 fade-in">
+                    <span class="text-7xl mb-6 drop-shadow-lg">${data.emoji}</span>
+                    <h2 class="font-title font-bold text-4xl text-white mb-2 drop-shadow-md">${data.title}</h2>
+                    <span class="text-sysGreen font-mono text-xs uppercase tracking-widest">${data.type}</span>
+                </div>
+                <div class="mb-6 slide-up">
+                    <p class="text-gray-400 text-xs uppercase font-mono tracking-widest mb-2">Meaning</p>
+                    <p class="text-white text-xl font-body leading-relaxed">${data.meaning}</p>
+                </div>
+                <div class="bg-black/50 p-6 rounded-xl slide-up border-l-2 border-sysGreen" style="animation-delay: 0.1s">
+                    <p class="text-sysGreen text-xs uppercase font-mono tracking-widest mb-2">Example Log</p>
+                    <p class="text-white text-lg italic font-body">"${data.example}"</p>
+                </div>
+                ${data.followUp ? `
+                <div class="stt-box p-6 mt-6 bg-white/5 rounded-xl shadow-lg slide-up border-l-white" style="animation-delay: 0.2s">
+                    <span class="text-xs text-white uppercase font-mono tracking-widest mb-2 block">Audio Prompt:</span>
+                    <p class="text-white text-base font-body italic">"${data.followUp}"</p>
+                </div>
+                ` : ''}
+            `;
+            document.getElementById('intel-panel').classList.remove('translate-x-full');
+        }
+        
+        function closeJIT() { 
+            document.getElementById('jit-panel').classList.add('translate-x-full'); 
+            document.querySelectorAll('.jit-word').forEach(r => r.classList.remove('active'));
+        }
+
+        function checkCombat(btn, isCorrect, num) {
+            const btns = btn.parentElement.querySelectorAll('.combat-btn');
+            btns.forEach(b => { b.disabled = true; if(b !== btn) b.style.opacity = '0.3'; });
+            
+            if (isCorrect) {
+                btn.classList.add('correct');
+                gainXP(20);
+                document.getElementById(`drill-${num}`).classList.add('xp-flash');
+                setTimeout(() => document.getElementById(`drill-${num}`).classList.remove('xp-flash'), 500);
+                document.getElementById(`fb-${num}`).classList.remove('hidden');
+            } else {
+                btn.classList.add('wrong');
+                takeDamage(15);
+                setTimeout(() => {
+                    btns.forEach(b => { if(!b.classList.contains('wrong')){ b.disabled = false; b.style.opacity = '1'; } });
+                }, 600);
+            }
+        }
+
+        window.onload = renderStep;
+    </script>
+</body>
+</html>
